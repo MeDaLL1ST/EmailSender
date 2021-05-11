@@ -7,11 +7,27 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws MessagingException { // с yandex smtp была возможность тестить, при желании можно настроить свой сервис
-        Encryption encryption = Encryption.getDefault("key", "salt", new byte[16]);
         Scanner in = new Scanner(System.in);
+        System.out.println("Enter the encryption key:");
+        String key=in.nextLine();
+        System.out.println("Enter the encryption salt:");
+        String salt=in.nextLine();
+        Encryption encryption = Encryption.getDefault(key, salt, new byte[16]);
+        System.out.println("Enter the email address of your work account:");
+        String name=in.nextLine();
+        System.out.println("Enter the special SMTP account token issued by yandex:");
+        String pass=in.nextLine();
+        System.out.println("Enter the operating mode('s' - sending,'r' - receive):");
         char state = in.nextLine().charAt(0);
         if (state=='s') { //sender
-
+            System.out.printf("Enter the email address you want to send from:");
+            String email=in.nextLine();
+            System.out.printf("Enter where:");
+            String email2=in.nextLine();
+            System.out.printf("Enter the subject of the email:");
+            String sbg=in.nextLine();
+            System.out.printf("Enter the message text:");
+            String text=in.nextLine();
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
             try {
                 Thread.currentThread().setContextClassLoader(javax.mail.Session.class.getClassLoader());
@@ -26,14 +42,14 @@ public class Main {
                         new Authenticator() {
                             @Override
                             protected PasswordAuthentication getPasswordAuthentication() {
-                                return new PasswordAuthentication("user", "password");
+                                return new PasswordAuthentication(name, pass);
                             }
                         });
                 Message message = new MimeMessage(session);
-                message.setFrom(new InternetAddress("from"));
-                message.setRecipient(Message.RecipientType.TO, new InternetAddress("to"));
-                message.setSubject("тема письма");
-                message.setText(encryption.encryptOrNull("text"));
+                message.setFrom(new InternetAddress(email));
+                message.setRecipient(Message.RecipientType.TO, new InternetAddress(email2));
+                message.setSubject(sbg);
+                message.setText(encryption.encryptOrNull(text));
                 Transport.send(message);
             } finally {
                 Thread.currentThread().setContextClassLoader(loader);
@@ -49,7 +65,7 @@ public class Main {
             try {
 
                 store = session.getStore("imap");
-                store.connect("imap.yandex.ru", 993, "user", "pass");
+                store.connect("imap.yandex.ru", 993, name, pass);
                 Folder inbox = null;
                 try {
 
